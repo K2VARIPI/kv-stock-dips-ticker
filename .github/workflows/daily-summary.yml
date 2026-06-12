@@ -1,0 +1,26 @@
+name: Daily Watchlist Summary
+
+on:
+  schedule:
+    # 20:15 UTC Mon–Fri ≈ 4:15pm ET (EDT). During winter (EST) this is 3:15pm;
+    # switch to '15 21 * * 1-5' if you want it after the close year-round.
+    - cron: '15 20 * * 1-5'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Send daily summary
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python monitor.py --summary

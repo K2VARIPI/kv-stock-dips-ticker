@@ -1,0 +1,38 @@
+name: Stock Dip Monitor
+
+on:
+  schedule:
+    # Every 30 min, 13:30–20:00 UTC, Mon–Fri (≈ 9:30am–4pm ET during daylight time).
+    # Note: GitHub cron is UTC and doesn't follow DST — during winter (EST),
+    # change to '0,30 14-21 * * 1-5' or just leave it; the extra hour is harmless.
+    - cron: '0,30 13-20 * * 1-5'
+  workflow_dispatch: {}   # allows manual "Run workflow" button for testing
+
+permissions:
+  contents: write   # needed to commit state/alerts.json back
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run monitor
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python monitor.py
+
+      - name: Persist alert state
+        run: |
+          git config user.name "dip-monitor-bot"
+          git config user.email "actions@github.com"
+          git add state/ || true
+          git diff --staged --quiet || git commit -m "Update alert state [skip ci]"
+          git push || true

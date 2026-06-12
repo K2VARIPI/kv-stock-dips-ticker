@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Needed only by run_local.py, to work around local SSL-inspection (e.g. Norton)
+truststore
