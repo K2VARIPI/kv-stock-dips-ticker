@@ -15,11 +15,13 @@ WATCHLIST = [
     "UNH", "LLY", "JNJ", "ABBV", "TMO",
     # Consumer / retail
     "COST", "WMT", "PG", "KO", "MCD", "HD",
-    # Industrial / energy
-    "CAT", "XOM", "CVX", "LMT",
-    # Semis / enterprise
-    "TSM", "AMD", "CRM", "ADBE",
+    # Enterprise software
+    "CRM", "ADBE",
 ]
+# Dropped vs v1: CAT, XOM, CVX, LMT (commodity/cyclical, lower margin quality),
+# AMD, TSM (more volatile / geopolitical risk). Keep this list to names with
+# durable moats, strong balance sheets, and consistent profitability -- the
+# kind you'd genuinely back up the truck on during a crash.
 
 BENCHMARK = "SPY"
 
@@ -28,13 +30,13 @@ BENCHMARK = "SPY"
 # A ticker becomes a "candidate" when min_signals fire, or on a panic drop.
 # ---------------------------------------------------------------------------
 TECHNICAL = {
-    "today_drop_pct": 4.0,        # down >= 4% today
-    "drop_vs_market_pct": 3.0,    # >= 3% worse than SPY (company-specific)
-    "off_52w_high_pct": 20.0,     # >= 20% below 52-week high
-    "rsi_oversold": 30.0,         # RSI(14) <= 30
-    "volume_spike_ratio": 2.0,    # today's volume >= 2x its 20-day average
-    "min_signals": 2,
-    "panic_drop_pct": 7.0,        # single-day drop that always alerts
+    "today_drop_pct": 8.0,        # down >= 8% today (crash-level single day)
+    "drop_vs_market_pct": 5.0,    # >= 5% worse than SPY (company-specific carnage)
+    "off_52w_high_pct": 30.0,     # >= 30% below 52-week high (deep correction)
+    "rsi_oversold": 20.0,         # RSI(14) <= 20 (extreme, rare oversold)
+    "volume_spike_ratio": 3.0,    # today's volume >= 3x its 20-day average (panic selling)
+    "min_signals": 3,             # require strong confirmation, not just one signal
+    "panic_drop_pct": 10.0,       # single-day drop that always alerts
 }
 
 # ---------------------------------------------------------------------------
@@ -43,9 +45,10 @@ TECHNICAL = {
 # the same lenses a desk analyst applies before averaging into a name.
 # ---------------------------------------------------------------------------
 SCORING = {
-    "min_alert_score": 40,   # candidates below this are logged but not pushed
-    "strong": 70,            # label thresholds for the alert headline
-    "solid": 55,
+    "min_alert_score": 70,   # candidates below this are logged but not pushed --
+                             # only push when it's a genuinely strong opportunity
+    "strong": 80,            # label thresholds for the alert headline
+    "solid": 70,
 }
 
 # ---------------------------------------------------------------------------
@@ -59,9 +62,9 @@ RISK = {
 # Alerting behavior
 # ---------------------------------------------------------------------------
 ALERTS = {
-    "realert_hours": 24,           # don't re-alert same ticker within N hours...
-    "realert_extra_drop_pct": 3.0, # ...unless it fell this much further
-    "max_alerts_per_run": 5,       # cap pushes per scan (worst first)
+    "realert_hours": 48,           # don't re-alert same ticker within N hours...
+    "realert_extra_drop_pct": 5.0, # ...unless it fell this much further
+    "max_alerts_per_run": 3,       # cap pushes per scan (worst first)
 }
 
 # ---------------------------------------------------------------------------
