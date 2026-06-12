@@ -4,8 +4,15 @@ Configuration for the stock dip monitor (v2).
 WATCHLIST: Edit freely. A starting point of large-cap, financially strong
 companies -- NOT a recommendation. The tool works best when this list only
 contains companies you've researched and would genuinely buy at a discount.
+
+The block between the AUTO-WATCHLIST markers is rewritten automatically by
+screen_watchlist.py (run monthly via .github/workflows/watchlist-refresh.yml),
+which re-screens universe.csv for quality + momentum + stability and proposes
+the result as a PR. Edit the list by hand any time -- your edits just become
+the new baseline the next refresh diffs against.
 """
 
+# --- AUTO-WATCHLIST:BEGIN ---
 WATCHLIST = [
     # Mega-cap tech
     "MSFT", "AAPL", "GOOGL", "AMZN", "META", "NVDA", "AVGO",
@@ -18,10 +25,7 @@ WATCHLIST = [
     # Enterprise software
     "CRM", "ADBE",
 ]
-# Dropped vs v1: CAT, XOM, CVX, LMT (commodity/cyclical, lower margin quality),
-# AMD, TSM (more volatile / geopolitical risk). Keep this list to names with
-# durable moats, strong balance sheets, and consistent profitability -- the
-# kind you'd genuinely back up the truck on during a crash.
+# --- AUTO-WATCHLIST:END ---
 
 BENCHMARK = "SPY"
 

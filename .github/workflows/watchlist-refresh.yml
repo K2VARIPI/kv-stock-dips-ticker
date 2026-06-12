@@ -1,0 +1,37 @@
+name: Watchlist Refresh
+
+on:
+  schedule:
+    # 06:00 UTC on the 1st of each month
+    - cron: '0 6 1 * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Screen universe and update watchlist
+        run: python screen_watchlist.py
+
+      - name: Open PR if watchlist changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Refresh watchlist from monthly screen"
+          title: "Monthly watchlist refresh"
+          body-path: watchlist_diff.md
+          branch: watchlist-refresh
+          delete-branch: true
+          add-paths: config.py
