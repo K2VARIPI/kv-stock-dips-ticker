@@ -10,19 +10,23 @@ Usage:
   python run_local.py --summary   # end-of-day summary
   python run_local.py --test      # send a test push
 
-Set NTFY_TOPIC and (if needed) CA_BUNDLE below or via environment variables.
+Required environment variables (not hardcoded here -- keep secrets out of git):
+  NTFY_TOPIC  your private ntfy.sh topic
+  CA_BUNDLE   path to the combined CA bundle (see README for how to build it)
 """
 
 import os
 import runpy
+import sys
 
 import truststore
 
-NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "kv-stock-dips")
-CA_BUNDLE = os.environ.get("CA_BUNDLE", r"C:\Users\krish\cacert_with_norton.pem")
+if "NTFY_TOPIC" not in os.environ:
+    sys.exit("Set NTFY_TOPIC before running (see run_local.py docstring).")
+if "CA_BUNDLE" not in os.environ:
+    sys.exit("Set CA_BUNDLE before running (see run_local.py docstring).")
 
-os.environ["NTFY_TOPIC"] = NTFY_TOPIC
-os.environ["CURL_CA_BUNDLE"] = CA_BUNDLE
+os.environ["CURL_CA_BUNDLE"] = os.environ["CA_BUNDLE"]
 
 # Use the Windows certificate store (trusts Norton's intercepted certs)
 # for requests/ntfy, instead of the bundled CA file which curl_cffi needs.

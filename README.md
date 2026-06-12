@@ -61,7 +61,9 @@ can see whether your thresholds actually have an edge and tune `config.py`.
 ## Setup (15 minutes)
 
 1. **ntfy.sh (free push):** install the ntfy app, subscribe to a long private
-   topic name (e.g. `krishna-dips-x9k2m7q4`). Treat it like a password.
+   topic name (e.g. `yourname-dips-x9k2m7q4`). Treat it like a password --
+   never commit it to git or share it; anyone with it can read your alerts
+   or push fake ones to your phone.
 2. **GitHub:** create a **private** repo, upload these files (keep the
    `.github/workflows/` structure). Settings → Secrets → Actions →
    new secret `NTFY_TOPIC` = your topic name.
@@ -81,7 +83,10 @@ NTFY_TOPIC=your-topic python monitor.py --summary   # daily summary
 > `yfinance` and the ntfy push may fail with certificate errors. Use
 > `run_local.py` instead -- it works around this via a custom CA bundle and
 > `truststore`. See `requirements-local.txt` for its extra dependency
-> (`pip install -r requirements-local.txt`), then run e.g.
+> (`pip install -r requirements-local.txt`), then set `NTFY_TOPIC` and
+> `CA_BUNDLE` (path to a CA bundle file containing certifi's certs plus
+> your intercepting AV's exported root cert) as environment variables --
+> do not hardcode them in the script -- then run e.g.
 > `python run_local.py --test`.
 
 ## Files
