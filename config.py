@@ -14,10 +14,10 @@ the new baseline the next refresh diffs against.
 
 # --- AUTO-WATCHLIST:BEGIN ---
 WATCHLIST = [
-    "AAPL", "BRK-B", "CSCO", "GD", "GE", "GILD", "GOOG"
-    "GOOGL", "JNJ", "JPM", "KO", "LIN", "LLY", "MET"
-    "MRK", "NVDA", "PG", "TGT", "TXN", "UNH", "UNP"
-    "V", "VZ", "WMT"
+    "AAPL", "BRK-B", "CSCO", "GD", "GE", "GILD", "GOOG",
+    "GOOGL", "JNJ", "JPM", "KO", "LIN", "LLY", "MET",
+    "MRK", "NVDA", "PG", "TGT", "TXN", "UNH", "UNP",
+    "V", "VZ", "WMT",
 ]
 # --- AUTO-WATCHLIST:END ---
 

@@ -124,7 +124,7 @@ def score_ticker(symbol: str) -> dict | None:
 def rewrite_config(new_watchlist: list[str]) -> str:
     """Replace the WATCHLIST block between the AUTO-WATCHLIST markers."""
     text = CONFIG_FILE.read_text()
-    lines = ["    " + ", ".join(f'"{t}"' for t in new_watchlist[i:i + 7])
+    lines = ["    " + ", ".join(f'"{t}"' for t in new_watchlist[i:i + 7]) + ","
              for i in range(0, len(new_watchlist), 7)]
     block = "WATCHLIST = [\n" + "\n".join(lines) + "\n]"
     pattern = r"WATCHLIST = \[.*?\]"
