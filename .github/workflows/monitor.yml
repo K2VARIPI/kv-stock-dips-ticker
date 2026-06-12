@@ -36,3 +36,15 @@ jobs:
           git add state/ || true
           git diff --staged --quiet || git commit -m "Update alert state [skip ci]"
           git push || true
+
+      - name: Notify on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          curl -s \
+            -H "Title: Stock Dip Monitor: scan failed" \
+            -H "Priority: high" \
+            -H "Tags: warning" \
+            -d "Intraday scan failed. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "https://ntfy.sh/$NTFY_TOPIC"

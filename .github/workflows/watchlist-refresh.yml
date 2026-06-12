@@ -35,3 +35,15 @@ jobs:
           branch: watchlist-refresh
           delete-branch: true
           add-paths: config.py
+
+      - name: Notify on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          curl -s \
+            -H "Title: Stock Dip Monitor: watchlist refresh failed" \
+            -H "Priority: high" \
+            -H "Tags: warning" \
+            -d "Watchlist refresh failed. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "https://ntfy.sh/$NTFY_TOPIC"
