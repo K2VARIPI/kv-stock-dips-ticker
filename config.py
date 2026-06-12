@@ -14,16 +14,10 @@ the new baseline the next refresh diffs against.
 
 # --- AUTO-WATCHLIST:BEGIN ---
 WATCHLIST = [
-    # Mega-cap tech
-    "MSFT", "AAPL", "GOOGL", "AMZN", "META", "NVDA", "AVGO",
-    # Payments / financials
-    "V", "MA", "JPM", "BRK-B",
-    # Healthcare
-    "UNH", "LLY", "JNJ", "ABBV", "TMO",
-    # Consumer / retail
-    "COST", "WMT", "PG", "KO", "MCD", "HD",
-    # Enterprise software
-    "CRM", "ADBE",
+    "AAPL", "BRK-B", "CSCO", "GD", "GE", "GILD", "GOOG"
+    "GOOGL", "JNJ", "JPM", "KO", "LIN", "LLY", "MET"
+    "MRK", "NVDA", "PG", "TGT", "TXN", "UNH", "UNP"
+    "V", "VZ", "WMT"
 ]
 # --- AUTO-WATCHLIST:END ---
 
