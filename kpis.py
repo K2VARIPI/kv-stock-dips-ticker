@@ -120,13 +120,40 @@ def fetch_top_news(tk: yf.Ticker) -> str | None:
 # ---------------------------------------------------------------- scoring
 
 def _pts(value, bands: list[tuple[float, float]], higher_is_better=True) -> float:
-    """Award points from (threshold, points) bands. None -> 0."""
+    """Award points from (threshold, points) bands. None -> 0.
+
+    IMPORTANT: bands must be ordered from best to worst threshold
+    (descending if higher_is_better, ascending otherwise) -- the first
+    matching band wins.
+    """
     if value is None:
         return 0.0
     for threshold, points in bands:
         if (value >= threshold) if higher_is_better else (value <= threshold):
             return points
     return 0.0
+
+
+# Shared with screen_watchlist.py so the dip-quality scorer and the monthly
+# watchlist refresher agree on what "quality" means -- tune in one place.
+QUALITY_BANDS = {
+    "roe": [(0.25, 8), (0.15, 6), (0.05, 3)],
+    "de": [(50, 8), (100, 5), (200, 2)],
+    "fcf_margin": [(0.20, 8), (0.10, 6), (0.0001, 3)],
+    "rev_growth": [(0.12, 8), (0.05, 6), (0.0, 3)],
+    "margin": [(0.20, 8), (0.10, 5), (0.0, 2)],
+}
+
+
+def quality_score(fund: dict) -> float:
+    """Business-quality score (0-40) from ROE, leverage, FCF margin, growth, and margin."""
+    q = 0.0
+    q += _pts(fund.get("roe"), QUALITY_BANDS["roe"])
+    q += _pts(fund.get("de"), QUALITY_BANDS["de"], higher_is_better=False)
+    q += _pts(fund.get("fcf_margin"), QUALITY_BANDS["fcf_margin"])
+    q += _pts(fund.get("rev_growth"), QUALITY_BANDS["rev_growth"])
+    q += _pts(fund.get("margin"), QUALITY_BANDS["margin"])
+    return min(q, 40)
 
 
 def dip_quality_score(tech: dict, fund: dict) -> tuple[int, dict]:
@@ -141,13 +168,7 @@ def dip_quality_score(tech: dict, fund: dict) -> tuple[int, dict]:
     technical = min(t, 35)
 
     # --- QUALITY (0-40): is this a business you want more of when it's down?
-    q = 0.0
-    q += _pts(fund.get("roe"), [(0.25, 8), (0.15, 6), (0.05, 3)])
-    q += _pts(fund.get("de"), [(50, 8), (100, 5), (200, 2)], higher_is_better=False)
-    q += _pts(fund.get("fcf_margin"), [(0.20, 8), (0.10, 6), (0.0001, 3)])
-    q += _pts(fund.get("rev_growth"), [(0.12, 8), (0.05, 6), (0.0, 3)])
-    q += _pts(fund.get("margin"), [(0.20, 8), (0.10, 5), (0.0, 2)])
-    quality = min(q, 40)
+    quality = quality_score(fund)
 
     # --- VALUATION / STREET (0-25)
     v = 0.0

@@ -44,6 +44,7 @@ from kpis import (dip_quality_score, fetch_earnings_proximity,
 STATE_DIR = Path(__file__).parent / "state"
 ALERT_STATE = STATE_DIR / "alerts.json"
 HISTORY = STATE_DIR / "history.json"
+MAX_HISTORY = 1000  # cap history.json so it doesn't grow forever
 
 
 # ---------------------------------------------------------------- state
@@ -167,9 +168,13 @@ def format_alert(h: dict) -> str:
         extras.append(f"beta {f['beta']:.1f}")
     if isinstance(f.get("short_pct"), float):
         extras.append(f"short int {f['short_pct'] * 100:.1f}%")
-    if isinstance(f.get("div_yield"), float):
-        dy = f["div_yield"] * 100 if f["div_yield"] < 1 else f["div_yield"]
-        extras.append(f"div {dy:.1f}%")
+    if isinstance(f.get("div_yield"), float) and f["div_yield"] > 0:
+        raw = f["div_yield"]
+        # yfinance has returned both 0.024 (fraction) and 2.4 (percent) historically.
+        # No real stock yields >=50%, so treat values below that as a fraction.
+        dy = raw if raw >= 0.5 else raw * 100
+        if dy < 25:  # sanity cap -- drop obviously-bad values rather than alert "div 2400%"
+            extras.append(f"div {dy:.1f}%")
     if extras:
         lines.append("Risk: " + " | ".join(extras))
 
@@ -188,10 +193,13 @@ def should_alert(hit: dict, state: dict) -> bool:
     last = state.get(hit["ticker"])
     if not last:
         return True
-    age = datetime.now(timezone.utc) - datetime.fromisoformat(last["time"])
+    try:
+        age = datetime.now(timezone.utc) - datetime.fromisoformat(last["time"])
+        extra_drop = (hit["price"] / last["price"] - 1) * 100
+    except (KeyError, ValueError, ZeroDivisionError):
+        return True  # malformed entry -- treat as no prior alert
     if age > timedelta(hours=ALERTS["realert_hours"]):
         return True
-    extra_drop = (hit["price"] / last["price"] - 1) * 100
     return extra_drop <= -ALERTS["realert_extra_drop_pct"]
 
 
@@ -202,7 +210,11 @@ def download_watchlist() -> tuple[dict, float, list[str]]:
     data = yf.download(tickers + [BENCHMARK], period="1y", interval="1d",
                        group_by="ticker", auto_adjust=True,
                        progress=False, threads=True)
+    if BENCHMARK not in data.columns.get_level_values(0):
+        raise RuntimeError(f"Benchmark {BENCHMARK} missing from download -- aborting run")
     spy = data[BENCHMARK]["Close"].dropna()
+    if len(spy) < 2:
+        raise RuntimeError(f"Insufficient {BENCHMARK} data ({len(spy)} rows)")
     spy_change = float((spy.iloc[-1] / spy.iloc[-2] - 1) * 100)
     return data, spy_change, tickers
 
@@ -256,7 +268,7 @@ def run_scan() -> None:
             print(f"Alerted {h['ticker']} (score {h['score']})")
 
     _save(ALERT_STATE, state)
-    _save(HISTORY, history)
+    _save(HISTORY, history[-MAX_HISTORY:])
 
 
 # ---------------------------------------------------------------- summary

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import yfinance as yf
 
-from kpis import _pts  # reuse the same scoring-band helper
+from kpis import _pts, quality_score  # reuse the same scoring-band helper
 
 ROOT = Path(__file__).resolve().parent
 UNIVERSE_FILE = ROOT / "universe.csv"
@@ -77,13 +77,10 @@ def score_ticker(symbol: str) -> dict | None:
         return None
 
     # --- QUALITY (0-40), same bands as the dip-quality scorer ---
-    quality = 0.0
-    quality += _pts(roe, [(0.25, 8), (0.15, 6), (0.05, 3)])
-    quality += _pts(de, [(50, 8), (100, 5), (200, 2)], higher_is_better=False)
-    quality += _pts(fcf_margin, [(0.20, 8), (0.10, 6), (0.0001, 3)])
-    quality += _pts(rev_growth, [(0.12, 8), (0.05, 6), (0.0, 3)])
-    quality += _pts(margin, [(0.20, 8), (0.10, 5), (0.0, 2)])
-    quality = min(quality, 40)
+    quality = quality_score({
+        "roe": roe, "de": de, "fcf_margin": fcf_margin,
+        "rev_growth": rev_growth, "margin": margin,
+    })
 
     # --- PERFORMANCE (0-30): "high performing" = strong, resilient price action ---
     off_high_pct = None
@@ -121,22 +118,27 @@ def score_ticker(symbol: str) -> dict | None:
     }
 
 
+AUTO_WATCHLIST_PATTERN = (
+    r"# --- AUTO-WATCHLIST:BEGIN ---\nWATCHLIST = \[.*?\]\n# --- AUTO-WATCHLIST:END ---"
+)
+
+
 def rewrite_config(new_watchlist: list[str]) -> str:
     """Replace the WATCHLIST block between the AUTO-WATCHLIST markers."""
     text = CONFIG_FILE.read_text()
     lines = ["    " + ", ".join(f'"{t}"' for t in new_watchlist[i:i + 7]) + ","
              for i in range(0, len(new_watchlist), 7)]
-    block = "WATCHLIST = [\n" + "\n".join(lines) + "\n]"
-    pattern = r"WATCHLIST = \[.*?\]"
-    new_text = re.sub(pattern, block, text, count=1, flags=re.DOTALL)
+    block = ("# --- AUTO-WATCHLIST:BEGIN ---\nWATCHLIST = [\n" + "\n".join(lines)
+             + "\n]\n# --- AUTO-WATCHLIST:END ---")
+    new_text = re.sub(AUTO_WATCHLIST_PATTERN, block, text, count=1, flags=re.DOTALL)
     CONFIG_FILE.write_text(new_text)
     return new_text
 
 
 def current_watchlist() -> list[str]:
     text = CONFIG_FILE.read_text()
-    m = re.search(r"WATCHLIST = \[(.*?)\]", text, re.DOTALL)
-    return re.findall(r'"([^"]+)"', m.group(1))
+    m = re.search(AUTO_WATCHLIST_PATTERN, text, re.DOTALL)
+    return re.findall(r'"([^"]+)"', m.group(0))
 
 
 def main():
